@@ -1,0 +1,56 @@
+[project]
+name = "osmtileimage"
+version = "0.1.0"
+description = "A command line tool to generate tile usage images"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+
+authors = [
+    { name = "Paul Norman", email = "osmtileimage@paulnorman.ca" }
+]
+requires-python = ">=3.13"
+keywords = [
+    "mvt",
+    "openstreetmap",
+    "osm",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: GIS",
+]
+dependencies = [
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.4",
+    "pillow>=13.0.0",
+    "pyathena[pandas]>=4.2.0",
+    "typer>=0.27.3",
+]
+
+[project.urls]
+"Bug Reports" = "https://github.com/pnorman/tilekiln/issues"
+Homepage = "https://github.com/pnorman/tilekiln"
+Source = "https://github.com/pnorman/tilekiln/"
+
+
+[project.scripts]
+osmtileimage = "osmtileimage:app"
+
+[build-system]
+requires = ["uv_build>=0.12.0,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.ruff.lint]
+select = ["E", "F", "RUF", "W", "B", "C", "DTZ", "S", "I"]
+
+[tool.mypy]
+strict = true
+
+[dependency-groups]
+dev = [
+    "mypy>=2.4.0",
+    "pre-commit>=4.7.0",
+    "ruff>=0.17.2",
+]
