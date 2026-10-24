@@ -6,5 +6,8 @@ dist/
 wheels/
 *.egg-info
 
+# Likely generated image names
+*202*-*-*-*.png
+
 # Virtual environments
 .venv
