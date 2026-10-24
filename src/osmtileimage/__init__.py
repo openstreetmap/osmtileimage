@@ -1,4 +1,5 @@
 import datetime
+import re
 from enum import Enum
 from typing import Annotated, Optional
 
@@ -44,6 +45,39 @@ def date_condition() -> str:
     return "year=%(year)i AND month=%(month)i AND day=%(day)i AND hour=%(hour)i"
 
 
+def country_callback(value: list[str]) -> list[str]:
+    country_pattern = re.compile(r"^[a-z]{2}$", re.IGNORECASE)
+    for code in value:
+        if not country_pattern.match(code):
+            raise typer.BadParameter("Country code must be two letters")
+    return [code.upper() for code in value]
+
+
+def conditions(require_countries: list[str], useragent: Optional[str]) -> str:
+    ret = [
+        "z >= %(zoom)i",
+        "year=%(year)i",
+        "month=%(month)i",
+        "day=%(day)i",
+        "hour=%(hour)i",
+    ]
+
+    if require_countries:
+        # validated by country_callback above
+        countries = ", ".join(f"'{code}'" for code in require_countries)
+        ret += [f"country IN ({countries})"]
+
+    if useragent:
+        ret += ["useragent LIKE %(useragent)s"]
+
+    return " AND ".join(ret)
+
+
+# These functions are only ever called once so we don't
+# need to worry about mutable defaults
+# ruff: disable[B006]
+
+
 @app.command()
 def image(
     layer: Layer = Layer.raster,
@@ -52,13 +86,33 @@ def image(
     max: Optional[int] = None,
     prefix: str = "tiles-",
     zoom: Annotated[int, typer.Option(min=0, max=12)] = 12,
+    require_country: Annotated[
+        list[str],
+        typer.Option(
+            help=(
+                "Look at only requests from this country. Repeat for multiple countries"
+            ),
+            callback=country_callback,
+        ),
+    ] = [],
+    useragent: Optional[str] = None,
 ) -> None:
 
     match layer:
         case layer.raster:
-            tablename = "fastly_raster_location_logs_v4"
+            if useragent is None:
+                tablename = "fastly_raster_location_logs_v4"
+                requests_agg = "SUM(requests)"
+            else:
+                tablename = "fastly_raster_success_logs_v4"
+                requests_agg = "COUNT(*)"
         case layer.vector:
-            tablename = "fastly_vector_location_logs_v1"
+            if useragent is None:
+                tablename = "fastly_vector_location_logs_v1"
+                requests_agg = "SUM(requests)"
+            else:
+                tablename = "fastly_vector_success_logs_v2"
+                requests_agg = "COUNT(*)"
 
     with (
         connect(
@@ -75,12 +129,10 @@ def image(
             tiles_cte = (
                 "WITH tiles AS (\n"
                 "SELECT\n"
-                "SUM(requests) AS requests,\n"
+                f"{requests_agg} AS requests,\n"
                 "z, x, y\n"
                 f"FROM logs.{tablename}\n"
-                "WHERE year=%(year)i AND month=%(month)i AND day=%(day)i\n"
-                "AND hour=%(hour)i\n"
-                "AND z >= %(zoom)i\n"
+                f"WHERE {conditions(require_country, useragent)}\n"
                 "GROUP BY z, x, y\n"
                 ")\n"
             )
@@ -98,7 +150,9 @@ def image(
                 "day": date.day,
                 "hour": date.hour,
                 "zoom": zoom,
+                "useragent": useragent,
             }
+
             curs.execute(query, params)
             requests = np.zeros((1 << zoom, 1 << zoom), dtype=np.uint32)
             for tile in curs:
@@ -114,3 +168,6 @@ def image(
             im.save(filename)
 
             date += datetime.timedelta(hours=1)
+
+
+# ruff: enable[B006]
