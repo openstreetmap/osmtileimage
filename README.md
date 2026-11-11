@@ -42,6 +42,21 @@ Only periods that have been aggregated by ofastlylog can have images generated
 #### `--max`
 Max value for the color scale. By default the max value is the maximum value found in the data but when comparing images from different times you want a fixed maximum.
 
+#### `--linear-width`
+Default: 10
+
+Width of the linear portion of the color scale. This adjusts how very low values are displayed.
+
+#### `--require-country`
+Default: none
+
+Filter to tile requests from a specific country. The value must be a two letter country code used by Fastly. To filter to multiple countries, use the option multiple times.
+
+### `--useragent`
+Default: none
+
+Filters to tile requests where the user agent is SQL LIKE this string.
+
 #### `--prefix`
 Default: `tiles-`
 
@@ -59,5 +74,5 @@ The image will be 2<super>zoom</super> pixels in both directions.
 If sending images to other it can help to run them through oxipng. This cuts the size down to about a third of before. A good set of options is
 
 ```sh
-oxipng --zc 12 -f 0,9 --fast -p -a tiles-*.png
+oxipng -f 0,9 --fast -p -a tiles-*.png
 ```
