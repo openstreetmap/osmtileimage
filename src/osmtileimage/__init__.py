@@ -96,6 +96,7 @@ def image(
         ),
     ] = [],
     useragent: Optional[str] = None,
+    linear_width: int = 10,
 ) -> None:
 
     match layer:
@@ -122,6 +123,7 @@ def image(
         ) as conn,
         conn.cursor() as curs,
     ):
+        cm = mpl.colormaps["cubehelix"].resampled(2048)
         date = start
         while date <= end:
             filename = prefix + date.strftime("%Y-%m-%d-%H") + ".png"
@@ -157,12 +159,18 @@ def image(
             requests = np.zeros((1 << zoom, 1 << zoom), dtype=np.uint32)
             for tile in curs:
                 requests[tile[1], tile[0]] = tile[2]
-            max_requests = np.max(requests)
-            print(max_requests)
+            max_requests = np.percentile(requests, [99.99, 99.999, 100.0])
 
+            print(
+                f"99.99th percentile: {max_requests[0]}, "
+                f"99.999th percentile: {max_requests[1]}, "
+                f"100th percentile: {max_requests[2]}"
+            )
+            if max is None:
+                max = int(max_requests[1])
             # https://stackoverflow.com/a/78849568/2607762
-            pixels = mpl.colormaps["cubehelix"](
-                colors.AsinhNorm(linear_width=1, vmin=0, vmax=max)(requests)
+            pixels = cm(
+                colors.AsinhNorm(linear_width=linear_width, vmin=0, vmax=max)(requests)
             )
             im = Image.fromarray((pixels * 255).astype(np.uint8))
             im.save(filename)
