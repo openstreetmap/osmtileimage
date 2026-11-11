@@ -1,6 +1,6 @@
 [project]
 name = "osmtileimage"
-version = "0.1.0"
+dynamic = ["version"]
 description = "A command line tool to generate tile usage images"
 readme = "README.md"
 license = "GPL-3.0-or-later"
@@ -39,8 +39,15 @@ Source = "https://github.com/pnorman/tilekiln/"
 osmtileimage = "osmtileimage:app"
 
 [build-system]
-requires = ["uv_build>=0.12.0,<0.13.0"]
-build-backend = "uv_build"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+# Allows pypi uploads. ref: https://github.com/ofek/hatch-vcs/discussions/12
+[tool.hatch.version.raw-options]
+local_scheme = "no-local-version"
 
 [tool.ruff.lint]
 select = ["E", "F", "RUF", "W", "B", "C", "DTZ", "S", "I"]
