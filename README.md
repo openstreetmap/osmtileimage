@@ -69,6 +69,11 @@ osmtileimage will restrict the query to this zoom and higher and convert all til
 
 The image will be 2<super>zoom</super> pixels in both directions.
 
+#### `--timestamp`
+Default: off
+
+Overlay the image's hour in UTC in the top-left corner, useful for animations.
+
 ### Improving image size
 
 If sending images to other it can help to run them through oxipng. This cuts the size down to about a third of before. A good set of options is

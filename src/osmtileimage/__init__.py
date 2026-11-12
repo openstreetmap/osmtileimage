@@ -7,7 +7,7 @@ import matplotlib as mpl
 import matplotlib.colors as colors
 import numpy as np
 import typer
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from pyathena import connect
 from pyathena.pandas.cursor import PandasCursor
 
@@ -97,6 +97,9 @@ def image(
     ] = [],
     useragent: Optional[str] = None,
     linear_width: int = 10,
+    timestamp: Annotated[
+        bool, typer.Option(help="Overlay the image's hour in UTC.")
+    ] = False,
 ) -> None:
 
     match layer:
@@ -173,6 +176,16 @@ def image(
                 colors.AsinhNorm(linear_width=linear_width, vmin=0, vmax=max)(requests)
             )
             im = Image.fromarray((pixels * 255).astype(np.uint8))
+            if timestamp:
+                draw = ImageDraw.Draw(im)
+                font = ImageFont.load_default(size=32)
+                label = date.strftime("%Y-%m-%d %H:00 UTC")
+                text_bounds = draw.textbbox((8, 8), label, font=font)
+                draw.rectangle(
+                    (0, 0, text_bounds[2] + 8, text_bounds[3] + 8),
+                    fill=(0, 0, 0, 255),
+                )
+                draw.text((8, 8), label, font=font, fill=(255, 255, 255, 255))
             im.save(filename)
 
             date += datetime.timedelta(hours=1)
