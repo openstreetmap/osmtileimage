@@ -2,10 +2,15 @@
 
 This software generates heatmaps showing accesses of OpenStreetMap tiles.
 
-<!-- Created with osmtileimage --zoom 9 --start 2026-10-01T12:00:00 --end 2026-10-01T12:00:00 -->
+<!-- Created with
+osmtileimage --zoom 9 --start 2026-10-01T00:00:00 --end 2026-10-01T23:00:00 --max 1000000 --prefix example-
+ffmpeg -framerate 12 -pattern_type glob -i 'example-*.png' -plays 0 -vf "split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" example.apng
+apngopt example.apng
+mv example_opt.png example.png
+osmtileimage --zoom 9 --start 2026-10-01T12:00:00 --end 2026-10-01T12:00:00 -->
 <div align="center">
 
-![](example.png)
+<img src="example.png" width="512" height="512" />
 
 </div>
 
